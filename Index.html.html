@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#121317" />
+<title>Sobrecarga</title>
+<style>
+  :root {
+    --accent: #FF5A1F;
+    --bg: #121317;
+    --surface: #1C1E24;
+    --surface2: #23262E;
+    --text: #F2F1ED;
+    --muted: #8B8E98;
+    --green: #3DDC84;
+    --mono: 'SF Mono','Roboto Mono','IBM Plex Mono',ui-monospace,monospace;
+    --sans: -apple-system, system-ui, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); }
+  body {
+    color: var(--text);
+    font-family: var(--sans);
+    padding: 20px 16px 100px;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+
+  header { margin-bottom: 18px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 3px; color: var(--accent); margin-bottom: 4px; }
+  h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+
+  .exercise-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .ex-chip {
+    background: var(--surface); color: var(--muted);
+    border: 1px solid #2C2F38; border-radius: 999px;
+    padding: 9px 14px; font-size: 13.5px; font-weight: 600;
+  }
+  .ex-chip.active { background: var(--accent); color:#16100A; border-color: var(--accent); }
+  .ex-chip-add { background:transparent; color:var(--muted); border:1px dashed #3A3D47; border-radius:999px; padding:9px 14px; font-size:13.5px; }
+  .custom-wrap { display:none; gap:6px; flex:1; min-width:180px; }
+  .custom-wrap.show { display:flex; }
+  .custom-wrap input {
+    flex:1; background: var(--surface); border:1px solid #2C2F38; border-radius:999px;
+    padding:9px 14px; color:var(--text); font-size:13.5px; outline:none;
+  }
+  .custom-wrap button {
+    background: var(--green); color:#0A1F12; border:none; border-radius:50%;
+    width:36px; height:36px; font-weight:800;
+  }
+
+  .readout {
+    background: var(--surface); border:1px solid #2A2D36; border-radius:18px;
+    padding: 22px 20px; margin-bottom:18px;
+  }
+  .readout-label { font-family: var(--mono); font-size:11px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
+  .readout-main { font-family: var(--mono); font-size:52px; font-weight:700; line-height:1; font-variant-numeric: tabular-nums; }
+  .readout-unit { font-size:20px; color:var(--muted); margin-left:6px; font-weight:500; }
+  .readout-sub { font-family: var(--mono); font-size:13px; color:var(--muted); margin-top:8px; }
+  .readout-empty { font-family: var(--mono); font-size:14px; color:var(--muted); padding:8px 0; }
+  .stagnation { margin-top:12px; background:#3A2418; color:#FFB37A; font-family:var(--mono); font-size:12px; padding:8px 10px; border-radius:10px; border:1px solid #5A3622; }
+
+  .form { background: var(--surface); border:1px solid #2A2D36; border-radius:18px; padding:18px; display:flex; flex-direction:column; gap:14px; margin-bottom:14px; }
+  .row-split { display:flex; gap:12px; }
+  .stepper { display:flex; flex-direction:column; gap:6px; flex:1; }
+  .stepper-label { font-size:12px; color:var(--muted); font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
+  .stepper-controls { display:flex; align-items:center; background:var(--surface2); border-radius:14px; overflow:hidden; border:1px solid #2C2F38; }
+  .stepper-controls button { background:transparent; border:none; color:var(--text); font-size:22px; width:48px; height:48px; flex-shrink:0; }
+  .stepper-controls input {
+    flex:1; background:transparent; border:none; color:var(--text); text-align:center;
+    font-family: var(--mono); font-size:18px; font-weight:700; outline:none; width:100%; min-width:0;
+  }
+  .stepper-controls.big input { font-size:26px; font-weight:800; }
+
+  .error-text { color:#FF8A65; font-size:13px; }
+  .save-btn { background: var(--accent); color:#16100A; border:none; border-radius:14px; padding:16px 0; font-size:16px; font-weight:800; letter-spacing:0.3px; width:100%; }
+  .save-btn:disabled { opacity:0.6; }
+
+  .history-toggle { width:100%; background:transparent; border:none; color:var(--muted); font-size:13px; font-family:var(--mono); padding:10px 0; text-align:center; }
+  .history-list { display:flex; flex-direction:column; gap:8px; }
+  .history-empty { color:var(--muted); font-size:13px; padding:10px 0; }
+  .history-row { display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid #2A2D36; border-radius:12px; padding:12px 14px; }
+  .history-weight { font-family: var(--mono); font-size:16px; font-weight:700; }
+  .history-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+  .delete-btn { background:transparent; border:1px solid #3A2A2A; color:#C97A7A; border-radius:8px; padding:6px 10px; font-size:11px; }
+
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:#1C1E24; border:1px solid var(--accent); color:var(--text);
+    padding:10px 18px; border-radius:999px; font-size:13px; font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4); opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .toast.show { opacity:1; }
+
+  .install-hint {
+    background:var(--surface2); border:1px dashed #3A3D47; border-radius:14px;
+    padding:12px 14px; font-size:12px; color:var(--muted); margin-bottom:16px; line-height:1.5;
+  }
+  .install-hint b { color:var(--text); }
+</style>
+</head>
+<body>
+
+  <div class="install-hint">
+    📲 Para usar como app: abre este archivo desde el navegador del celular (Safari/Chrome) y elige <b>"Agregar a pantalla de inicio"</b>. Tus datos se guardan en este navegador, en este celular.
+  </div>
+
+  <header>
+    <div class="eyebrow">RH · CARGA</div>
+    <h1>Sobrecarga</h1>
+  </header>
+
+  <div class="exercise-row" id="exerciseRow"></div>
+
+  <div class="readout" id="readout"></div>
+
+  <div class="form">
+    <div class="stepper">
+      <div class="stepper-label">peso (kg)</div>
+      <div class="stepper-controls big">
+        <button onclick="step('weight', -2.5)">−</button>
+        <input type="number" id="weight" value="0" />
+        <button onclick="step('weight', 2.5)">+</button>
+      </div>
+    </div>
+    <div class="row-split">
+      <div class="stepper">
+        <div class="stepper-label">series</div>
+        <div class="stepper-controls">
+          <button onclick="step('sets', -1)">−</button>
+          <input type="number" id="sets" value="3" />
+          <button onclick="step('sets', 1)">+</button>
+        </div>
+      </div>
+      <div class="stepper">
+        <div class="stepper-label">reps</div>
+        <div class="stepper-controls">
+          <button onclick="step('reps', -1)">−</button>
+          <input type="number" id="reps" value="8" />
+          <button onclick="step('reps', 1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="error-text" id="errorText" style="display:none;"></div>
+    <button class="save-btn" id="saveBtn" onclick="handleSave()">Guardar set</button>
+  </div>
+
+  <button class="history-toggle" id="historyToggle" onclick="toggleHistory()">ver historial (0) ▼</button>
+  <div class="history-list" id="historyList" style="display:none;"></div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'rh-overload-logs';
+  const BASE_EXERCISES = ['Sentadilla', 'Peso muerto rumano', 'Press', 'Remo'];
+
+  let logs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  let exercise = BASE_EXERCISES[0];
+  let showHistory = false;
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function fmtDate(d) {
+    return new Date(d).toLocaleDateString('es-CO', { day:'2-digit', month:'short' });
+  }
+  function daysAgo(iso) { return (Date.now() - new Date(iso).getTime()) / 86400000; }
+  function round1(n) { return Math.round(n*10)/10; }
+
+  function allExerciseNames() {
+    const fromLogs = logs.map(l => l.exercise);
+    return Array.from(new Set([...BASE_EXERCISES, ...fromLogs]));
+  }
+  function entriesFor(ex) {
+    return logs.filter(l => l.exercise === ex).sort((a,b) => new Date(b.date) - new Date(a.date));
+  }
+  function lastEntry() { return entriesFor(exercise)[0] || null; }
+  function stagnation() {
+    const list = entriesFor(exercise);
+    if (list.length < 2) return null;
+    const recent = list[0];
+    const older = list.find(e => daysAgo(e.date) >= 13 && e.date !== recent.date);
+    if (!older) return null;
+    if (recent.weight <= older.weight) return { since: older.date, weight: older.weight };
+    return null;
+  }
+
+  function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(logs)); }
+
+  function renderExercises() {
+    const row = document.getElementById('exerciseRow');
+    row.innerHTML = '';
+    allExerciseNames().forEach(ex => {
+      const btn = document.createElement('button');
+      btn.className = 'ex-chip' + (ex === exercise ? ' active' : '');
+      btn.textContent = ex;
+      btn.onclick = () => { exercise = ex; prefill(); renderAll(); };
+      row.appendChild(btn);
+    });
+    const addBtn = document.createElement('button');
+    addBtn.className = 'ex-chip-add';
+    addBtn.textContent = '+ otro';
+    addBtn.onclick = showCustomInput;
+    row.appendChild(addBtn);
+  }
+
+  function showCustomInput() {
+    const row = document.getElementById('exerciseRow');
+    const wrap = document.createElement('div');
+    wrap.className = 'custom-wrap show';
+    wrap.innerHTML = `<input id="customInput" placeholder="nombre del ejercicio" /><button onclick="confirmCustom()">✓</button>`;
+    row.appendChild(wrap);
+    document.getElementById('customInput').focus();
+    document.getElementById('customInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') confirmCustom();
+    });
+  }
+  function confirmCustom() {
+    const val = document.getElementById('customInput').value.trim();
+    if (!val) return;
+    exercise = val;
+    prefill();
+    renderAll();
+  }
+
+  function prefill() {
+    const e = lastEntry();
+    document.getElementById('weight').value = e ? e.weight : 0;
+    document.getElementById('sets').value = e ? e.sets : 3;
+    document.getElementById('reps').value = e ? e.reps : 8;
+  }
+
+  function step(field, delta) {
+    const input = document.getElementById(field);
+    const min = field === 'weight' ? 0 : 1;
+    const newVal = Math.max(min, round1(Number(input.value) + delta));
+    input.value = newVal;
+  }
+
+  function renderReadout() {
+    const e = lastEntry();
+    const s = stagnation();
+    const el = document.getElementById('readout');
+    let html = `<div class="readout-label">última vez</div>`;
+    if (e) {
+      html += `<div class="readout-main">${e.weight}<span class="readout-unit">kg</span></div>
+                <div class="readout-sub">${e.sets} × ${e.reps} reps · ${fmtDate(e.date)}</div>`;
+    } else {
+      html += `<div class="readout-empty">sin registros — hoy es el primero</div>`;
+    }
+    if (s) {
+      html += `<div class="stagnation">⚠ estancado desde ${fmtDate(s.since)} en ${s.weight}kg</div>`;
+    }
+    el.innerHTML = html;
+  }
+
+  function renderHistory() {
+    const toggle = document.getElementById('historyToggle');
+    const list = document.getElementById('historyList');
+    const entries = entriesFor(exercise);
+    toggle.textContent = showHistory ? 'ocultar historial ▲' : `ver historial (${entries.length}) ▼`;
+    list.style.display = showHistory ? 'flex' : 'none';
+    list.style.flexDirection = 'column';
+    if (!showHistory) return;
+    if (entries.length === 0) {
+      list.innerHTML = `<div class="history-empty">Nada todavía para ${exercise}.</div>`;
+      return;
+    }
+    list.innerHTML = entries.map(e => `
+      <div class="history-row">
+        <div>
+          <div class="history-weight">${e.weight}kg</div>
+          <div class="history-meta">${e.sets} × ${e.reps} · ${fmtDate(e.date)}</div>
+        </div>
+        <button class="delete-btn" onclick="deleteEntry('${e.id}')">eliminar</button>
+      </div>
+    `).join('');
+  }
+
+  function toggleHistory() { showHistory = !showHistory; renderHistory(); }
+
+  function deleteEntry(id) {
+    logs = logs.filter(l => l.id !== id);
+    persist();
+    renderAll();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorText');
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function handleSave() {
+    const weight = Number(document.getElementById('weight').value);
+    const sets = Number(document.getElementById('sets').value);
+    const reps = Number(document.getElementById('reps').value);
+    if (weight <= 0) { showError('El peso debe ser mayor a 0.'); return; }
+    showError('');
+    const prev = lastEntry();
+    const entry = { id: uid(), exercise, weight, reps, sets, date: new Date().toISOString() };
+    logs.unshift(entry);
+    persist();
+    showToast(!prev || weight > prev.weight ? '🔥 Nuevo peso máximo' : 'Guardado');
+    renderAll();
+  }
+
+  function renderAll() {
+    renderExercises();
+    renderReadout();
+    renderHistory();
+  }
+
+  prefill();
+  renderAll();
+</script>
+</body>
+</html>
