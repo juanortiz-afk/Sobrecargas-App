@@ -294,11 +294,39 @@ function importData(e) {
     try {
       const imported = JSON.parse(ev.target.result);
       if (!imported.sessions) throw new Error('formato inválido');
-      if (!confirm(`Esto reemplazará tus ${db.sessions.length} sesiones actuales por ${imported.sessions.length} del archivo. ¿Continuar?`)) return;
-      db = imported;
+
+      let merged = 0;
+      const allImportedExercises = [];
+      imported.sessions.forEach(s => (s.exercises||[]).forEach(ex => allImportedExercises.push(ex)));
+
+      let recSession = null;
+      allImportedExercises.forEach(impEx => {
+        let placed = false;
+        for (const s of db.sessions) {
+          const ex = (s.exercises||[]).find(e => e.name.trim().toLowerCase() === impEx.name.trim().toLowerCase());
+          if (ex) {
+            ex.logs = ex.logs || [];
+            (impEx.logs||[]).forEach(log => {
+              const dup = ex.logs.some(l => l.date===log.date && l.weight===log.weight && l.sets===log.sets && l.reps===log.reps);
+              if (!dup) { ex.logs.push({id: log.id||uid(), weight: log.weight, sets: log.sets, reps: log.reps, date: log.date}); merged++; }
+            });
+            placed = true; break;
+          }
+        }
+        if (!placed) {
+          if (!recSession) {
+            recSession = db.sessions.find(s => s.name === 'Recuperados') || {id: uid(), name: 'Recuperados', exercises: []};
+            if (!db.sessions.includes(recSession)) db.sessions.push(recSession);
+          }
+          let ex = recSession.exercises.find(e => e.name === impEx.name);
+          if (!ex) { ex = {id: uid(), name: impEx.name, logs: []}; recSession.exercises.push(ex); }
+          (impEx.logs||[]).forEach(log => { ex.logs.push({id: log.id||uid(), weight: log.weight, sets: log.sets, reps: log.reps, date: log.date}); merged++; });
+        }
+      });
+
       save();
       renderSessions();
-      alert('Datos importados correctamente.');
+      alert(`${merged} registros combinados con tus sesiones existentes.`);
     } catch (err) {
       alert('Archivo inválido — no se pudo importar.');
     }
