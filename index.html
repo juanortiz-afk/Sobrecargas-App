@@ -30,6 +30,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 /* VIEWS */
 .view { display: none; padding: 20px 16px 100px; max-width: 480px; margin: 0 auto; }
 .view.active { display: block; }
+.view { padding-top: calc(20px + env(safe-area-inset-top, 20px)); }
 
 /* HEADER */
 .hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
