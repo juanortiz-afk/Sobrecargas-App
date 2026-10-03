@@ -276,14 +276,22 @@ function migrateOldData() {
   }
 }
 
-function exportData() {
-  const blob = new Blob([JSON.stringify(db, null, 2)], {type: 'application/json'});
+async function exportData() {
+  const json = JSON.stringify(db, null, 2);
+  const filename = `sobrecarga-backup-${new Date().toISOString().slice(0,10)}.json`;
+  try {
+    const file = new File([json], filename, {type: 'application/json'});
+    if (navigator.canShare && navigator.canShare({files: [file]})) {
+      await navigator.share({files: [file], title: 'Backup Sobrecarga'});
+      return;
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') return; // el usuario canceló el share, no es error
+  }
+  // Respaldo: abre el JSON en una pestaña nueva para copiar/guardar manualmente
+  const blob = new Blob([json], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `sobrecarga-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  window.open(url, '_blank');
 }
 
 function importData(e) {
